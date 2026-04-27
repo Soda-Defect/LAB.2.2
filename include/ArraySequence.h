@@ -3,6 +3,7 @@
 
 #include "Sequence.h"
 #include "DynamicArray.h"
+#include "MapUtils.h"
 #include <tuple>
 #include <algorithm>
 #include <functional>
@@ -38,7 +39,13 @@ public:
     T &operator[](int index) override;
     const T &operator[](int index) const override;
 
+    Sequence<T> *Map(std::function<T(const T &)> function) const override;
+    T Reduce(std::function<T(const T &, const T &)> function, const T &initial) const override;
+    Sequence<T> *Where(std::function<bool(const T &)> predicate) const override;
+    Sequence<T> *Concat(Sequence<T> *other) const override;
+    void Slice(int start, int count, Sequence<T> *insertSequence = nullptr) override;
 
+    void printSeq() const;
 };
 
 template<typename T>
@@ -126,11 +133,103 @@ Sequence<T> *ArraySequence<T>::GetSubsequence(int startIndex, int endIndex) cons
     if (startIndex < 0 || endIndex >= GetLength() || startIndex > endIndex) {
         throw IndexOutOFBoundsException("Indexes out of range");
     }
-    auto *result = new ArraySequence<T>();
+    ArraySequence<T> *result = new ArraySequence<T>();
     for (int i = startIndex; i <= endIndex; i++) {
         result->Append(data[i]);
     }
     return result;
+}
+
+template<typename T>
+T &ArraySequence<T>::operator[](int index) {
+    return data[index];
+}
+
+template<typename T>
+const T &ArraySequence<T>::operator[](int index) const {
+    return const_cast<ArraySequence<T> *>(this)->operator[](index);
+}
+
+template<typename T>
+Sequence<T> *ArraySequence<T>::Map(std::function<T(const T &)> function) const {
+    ArraySequence<T> *result = new ArraySequence<T>();
+    std::cout << GetLength() << std::endl;
+    for (int i = 0; i < GetLength(); i++) {
+        result->Append(function(data.Get(i)));
+    }
+    return result;
+}
+
+template<typename T>
+T ArraySequence<T>::Reduce(std::function<T(const T &, const T &)> function, const T &initial) const {
+    T result = initial;
+    for (int i = 0; i < GetLength(); i++) {
+        result = function(result, data.Get(i));
+    }
+    return result;
+}
+
+template<typename T>
+Sequence<T> *ArraySequence<T>::Where(std::function<bool(const T &)> predicate) const {
+    auto *result = new ArraySequence<T>();
+    for (int i = 0; i < GetLength(); i++) {
+        if (predicate(data.Get(i))) {
+            result->Append(data.Get(i));
+        }
+    }
+    return result;
+}
+
+template<typename T>
+Sequence<T> *ArraySequence<T>::Concat(Sequence<T> *other) const {
+    auto *result = new ArraySequence<T>();
+    for (int i = 0; i < GetLength(); i++) {
+        result->Append(data.Get(i));
+    }
+    for (int i = 0; i < other->GetLength(); i++) {
+        result->Append(other->Get(i));
+    }
+    return result;
+}
+
+template<typename T>
+void ArraySequence<T>::Slice(int start, int count, Sequence<T> *insertSequence) {
+    int length = GetLength();
+    if (start < 0) {
+        start = length + start;
+    }
+    if (start < 0 || start >= length) {
+        throw IndexOutOFBoundsException("Start index out of range");
+    }
+    if (count < 0 || start + count > length) {
+        throw IndexOutOFBoundsException("Invalid count");
+    }
+
+    DynamicArray<T> newData;
+    for (int i = 0; i < start; i++) {
+        newData.push_back(data.Get(i));
+    }
+    if (insertSequence != nullptr) {
+        for (int i = 0; i < insertSequence->GetLength(); i++) {
+            newData.push_back(insertSequence->Get(i));
+        }
+    }
+    for (int i = start + count; i < length; i++) {
+        newData.push_back(data.Get(i));
+    }
+    data = std::move(newData);
+}
+
+template<typename T>
+void ArraySequence<T>::printSeq() const {
+    std::cout << "[";
+    for (int i = 0; i < GetLength(); i++) {
+        std::cout << data.Get(i);
+        if (i < GetLength() - 1){
+            std::cout << ", ";
+        }
+    }
+    std::cout << "]";
 }
 
 #endif // ARRAYSEQUENCE_H
