@@ -46,6 +46,15 @@ public:
     void Slice(int start, int count, Sequence<T> *insertSequence = nullptr) override;
 
     void printSeq() const;
+
+    class ArraySequenceIterator;
+    using iterator = ArraySequenceIterator;
+    using const_iterator = ArraySequenceIterator;
+
+    const_iterator begin() const;
+    iterator begin();
+    const_iterator end() const;
+    iterator end();
 };
 
 template<typename T>
@@ -230,6 +239,80 @@ void ArraySequence<T>::printSeq() const {
         }
     }
     std::cout << "]";
+}
+
+template<typename T>
+class ArraySequence<T>::ArraySequenceIterator {
+private:
+    const ArraySequence<T>* seq_;
+    int index_;
+public:
+    using iterator_category = std::bidirectional_iterator_tag;
+    using value_type = T;
+    using difference_type = std::ptrdiff_t;
+    using pointer = const T*;
+    using reference = const T&;
+
+    ArraySequenceIterator(const ArraySequence<T>* seq = nullptr, int index = 0)
+        : seq_(seq), index_(index) {}
+
+    reference operator*() const {
+        return (*seq_)[index_];
+    }
+
+    pointer operator->() const {
+        return &(operator*());
+    }
+
+    ArraySequenceIterator& operator++() {
+        ++index_;
+        return *this;
+    }
+
+    ArraySequenceIterator operator++(int) {
+        ArraySequenceIterator tmp = *this;
+        ++(*this);
+        return tmp;
+    }
+
+    ArraySequenceIterator& operator--() {
+        --index_;
+        return *this;
+    }
+
+    ArraySequenceIterator operator--(int) {
+        ArraySequenceIterator tmp = *this;
+        --(*this);
+        return tmp;
+    }
+
+    bool operator==(const ArraySequenceIterator& other) const {
+        return seq_ == other.seq_ && index_ == other.index_;
+    }
+
+    bool operator!=(const ArraySequenceIterator& other) const {
+        return !(*this == other);
+    }
+};
+
+template<typename T>
+typename ArraySequence<T>::const_iterator ArraySequence<T>::begin() const {
+    return const_iterator(this, 0);
+}
+
+template<typename T>
+typename ArraySequence<T>::iterator ArraySequence<T>::begin() {
+    return iterator(this, 0);
+}
+
+template<typename T>
+typename ArraySequence<T>::const_iterator ArraySequence<T>::end() const {
+    return const_iterator(this, GetLength());
+}
+
+template<typename T>
+typename ArraySequence<T>::iterator ArraySequence<T>::end() {
+    return iterator(this, GetLength());
 }
 
 #endif // ARRAYSEQUENCE_H
