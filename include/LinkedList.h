@@ -58,7 +58,7 @@ public:
     T GetFirst() const;
     T GetLast() const;
     T Get(int index) const;
-    int GetLenght() const;
+    int GetLength() const;
     bool IsEmpty() const;
 
     T operator[](int index) const;
@@ -254,7 +254,7 @@ T LinkedList<T>::Get(int index) const {
 }
 
 template<typename T>
-int LinkedList<T>::GetLenght() const {
+int LinkedList<T>::GetLength() const {
     return size;
 }
 

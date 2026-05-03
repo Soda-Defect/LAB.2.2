@@ -1,9 +1,13 @@
-cmake_minimum_required(VERSION 3.20)  # ✅ Исправлено
+cmake_minimum_required(VERSION 3.20) 
 project(LAB2 LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
+
+set(CMAKE_PREFIX_PATH "D:/Qt/6.11.0/mingw_64")
+set(CMAKE_CXX_COMPILER "D:/Qt/Tools/mingw1310_64/bin/g++.exe")
+set(CMAKE_C_COMPILER "D:/Qt/Tools/mingw1310_64/bin/gcc.exe")
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets LinguistTools)
 
@@ -12,10 +16,8 @@ qt_standard_project_setup()
 qt_add_executable(LAB2
     WIN32 MACOSX_BUNDLE
     src/main.cpp
-    # Только cpp файлы и файлы ресурсов
 )
 
-# Добавляем заголовки для отображения в IDE
 target_sources(LAB2 PRIVATE
     include/MainWindow.h
     include/WindowInt.h

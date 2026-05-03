@@ -19,7 +19,7 @@ public:
 
     ListSequence<T> &operator=(const ListSequence<T> &other);
 
-    int GetLenght() const override;
+    int GetLength() const override;
     T Get(int index) const override;
     T GetFirst() const override;
     T GetLast() const override;
@@ -113,7 +113,7 @@ T ListSequence<T>::Get(int index) const {
 
 template<typename T>
 T ListSequence<T>::GetFirst() const {
-    if(GetLenght() == 0){
+    if(GetLength() == 0){
         throw SizeException("Empty list");
     }
     return data.GetFirst();
@@ -121,7 +121,7 @@ T ListSequence<T>::GetFirst() const {
 
 template<typename T>
 T ListSequence<T>::GetLast() const {
-    if(GetLenght() == 0){
+    if(GetLength() == 0){
         throw SizeException("Empty list");
     }
     return data.GetLast();
@@ -170,7 +170,7 @@ void ListSequence<T>::RemoveAt(int index){
     for(int i = 0; i < index; i++){
         newList.push_back(data.Get(i));
     }
-    for(int i = index + 1; i < GetLength; i++){
+    for(int i = index + 1; i < GetLength(); i++){
         newList.push_back(data.Get(i));
     }
     data = newList;
@@ -334,7 +334,7 @@ bool ListSequence<T>::ListSequenceIterator::operator!=(const ListSequenceIterato
 
 template<typename T>
 typename ListSequence<T>::const_iterator ListSequence<T>::begin() const {
-    return const_iterator(data_.GetHead());
+    return const_iterator(data.GetHead());
 }
 
 template<typename T>

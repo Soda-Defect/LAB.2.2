@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 #include "WindowInt.h"
 #include <QApplication>
+
 int  run(int argc, char *argv[]){
     QApplication a(argc, argv);
     QStringList types = {"Целые числа", "Вещественные числа", "Символы", "Строки"};
@@ -16,6 +17,8 @@ int  run(int argc, char *argv[]){
         MainWindowInt w;
         w.show();
         return a.exec();
+    }
     return 1;
 }
+
 #endif // MAINWINDOW_H
