@@ -1,8 +1,6 @@
-#include <iostream>
+#include "../include/MainWindow.h"
 
-int main()
-{
-    std::cout << "Hello, world!" << std::endl;
-
+int main(int argc, char *argv[]) {
+    run(argc,argv);
     return 0;
 }

@@ -7,6 +7,13 @@
 
 template<typename T>
 class LinkedList{
+public:
+    struct Node {
+        T data;
+        Node *prev;
+        Node *next;
+        Node(const T &value);
+    };
 private:
     Node *head;
     Node *tail;
@@ -24,13 +31,6 @@ private:
     };
 
 public:
-    struct Node {
-        T data;
-        Node *prev;
-        Node *next;
-        Node(const T &value);
-    };
-
     LinkedList();
     LinkedList(T *items, int count);
     LinkedList(const LinkedList &list);
@@ -58,7 +58,7 @@ public:
     T GetFirst() const;
     T GetLast() const;
     T Get(int index) const;
-    int GetLength() const;
+    int GetLenght() const;
     bool IsEmpty() const;
 
     T operator[](int index) const;
@@ -254,7 +254,7 @@ T LinkedList<T>::Get(int index) const {
 }
 
 template<typename T>
-int LinkedList<T>::GetLength() const {
+int LinkedList<T>::GetLenght() const {
     return size;
 }
 

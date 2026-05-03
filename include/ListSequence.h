@@ -19,7 +19,7 @@ public:
 
     ListSequence<T> &operator=(const ListSequence<T> &other);
 
-    int GetLength() const override;
+    int GetLenght() const override;
     T Get(int index) const override;
     T GetFirst() const override;
     T GetLast() const override;
