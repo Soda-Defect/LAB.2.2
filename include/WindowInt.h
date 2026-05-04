@@ -22,6 +22,7 @@
 #include "Sequence.h"
 #include "ArraySequence.h"
 #include "ListSequence.h"
+#include "ZipUnzip.h"
 #include "MapUtils.h"
 
 class MainWindowInt : public QMainWindow {
@@ -43,6 +44,9 @@ private slots:
     void onWhere();
     void onConcat();
     void onSlice();
+    void onZip();
+    void onUnzip();
+    void onSequenceClicked(QListWidgetItem *item);
 
 private:
     QListWidget *listSequences;
@@ -188,6 +192,7 @@ void MainWindowInt::setupUI() {
     buttonRow2->addWidget(btnUnzip);
     mainLayout->addLayout(buttonRow2);
 
+    connect(listSequences, &QListWidget::itemClicked, this, &MainWindowInt::onSequenceClicked);
     connect(btnCreate, &QPushButton::clicked, this, &MainWindowInt::onCreateSequence);
     connect(btnRefresh, &QPushButton::clicked, this, &MainWindowInt::onRefreshList);
     connect(btnAppend, &QPushButton::clicked, this, &MainWindowInt::onAppend);
@@ -201,6 +206,8 @@ void MainWindowInt::setupUI() {
     connect(btnWhere, &QPushButton::clicked, this, &MainWindowInt::onWhere);
     connect(btnConcat, &QPushButton::clicked, this, &MainWindowInt::onConcat);
     connect(btnSlice, &QPushButton::clicked, this, &MainWindowInt::onSlice);
+    connect(btnZip, &QPushButton::clicked, this, &MainWindowInt::onZip);
+    connect(btnUnzip, &QPushButton::clicked, this, &MainWindowInt::onUnzip);
 }
 
 void MainWindowInt::updateSequenceList() {
@@ -244,13 +251,8 @@ void MainWindowInt::updateCurrentDisplay() {
 }
 
 Sequence<int>* MainWindowInt::createSequenceByType(int type) {
-    if (type == 1){
-        return new ArraySequence<int>();
-    }
-    if (type == 2){
-        return new ListSequence<int>();
-    }
-    //return new SegmentedList<int>();
+    if (type == 1) return new ArraySequence<int>();
+    if (type == 2) return new ListSequence<int>();
 }
 
 void MainWindowInt::onCreateSequence() {
@@ -259,7 +261,7 @@ void MainWindowInt::onCreateSequence() {
         QMessageBox::warning(this, "Ошибка", "Недопустимое имя");
         return;
     }
-    QStringList types = {"ArraySequence", "LinkedListSequence", "SegmentedList"};
+    QStringList types = {"ArraySequence", "ListSequence"};
     bool ok;
     QString typeStr = QInputDialog::getItem(this, "Тип", "Тип:", types, 0, false, &ok);
     if (!ok) return;
@@ -397,6 +399,93 @@ void MainWindowInt::onSlice() {
         currentSeq->Slice(start, count, nullptr);
         updateCurrentDisplay();
     } catch (std::exception& e) { QMessageBox::warning(this, "Ошибка", e.what()); }
+}
+
+
+void MainWindowInt::onZip() {
+    if (!currentSeq || sequences.size() < 2) {
+        QMessageBox::warning(this, "Ошибка", "Нужна вторая последовательность");
+        return;
+    }
+    QStringList names = sequences.keys();
+    QString other = QInputDialog::getItem(this, "Zip", "Вторая последовательность:", names, 0, false);
+    if (other.isEmpty() || other == currentName) return;
+
+    Sequence<std::tuple<int,int>>* zipped = ZipSequences(currentSeq, sequences[other]);
+    QString zName = QInputDialog::getText(this, "Сохранить Zip", "Имя:");
+    if (zName.isEmpty()) {
+        delete zipped;
+        return;
+    }
+    if (zippedSeqs.contains(zName) || sequences.contains(zName)) {
+        QMessageBox::warning(this, "Ошибка", "Имя уже существует");
+        delete zipped;
+        return;
+    }
+    zippedSeqs[zName] = zipped;
+    zippedNames.insert(zName);
+    updateSequenceList();
+    QMessageBox::information(this, "Zip", "Zipped последовательность сохранена как '" + zName + " [zipped]'");
+}
+
+
+void MainWindowInt::onUnzip() {
+    if (!currentZipped) {
+        QMessageBox::warning(this, "Ошибка", "Выбранная последовательность не является zipped");
+        return;
+    }
+    auto it = zippedSeqs.find(currentName);
+    if (it == zippedSeqs.end()) {
+        QMessageBox::warning(this, "Ошибка", "Zipped последовательность не найдена");
+        return;
+    }
+    auto [first, second] = UnzipSequences<int>(it.value());
+    QString fName = QInputDialog::getText(this, "Unzip", "Имя для первой последовательности:");
+    QString sName = QInputDialog::getText(this, "Unzip", "Имя для второй последовательности:");
+    if (!fName.isEmpty() && !sName.isEmpty() && !sequences.contains(fName) && !zippedSeqs.contains(fName) &&
+        !sequences.contains(sName) && !zippedSeqs.contains(sName)) {
+        sequences[fName] = first;
+        sequences[sName] = second;
+        delete it.value();
+        zippedSeqs.erase(it);
+        zippedNames.remove(currentName);
+        updateSequenceList();
+        currentZipped = nullptr;
+        currentName.clear();
+        currentSeq = nullptr;
+        labelCurrent->setText("Текущая последовательность: не выбрана");
+        updateCurrentDisplay();
+        QMessageBox::information(this, "Unzip", "Последовательности созданы");
+    } else {
+        delete first;
+        delete second;
+        QMessageBox::warning(this, "Ошибка", "Невалидные имена или имена уже существуют");
+    }
+}
+
+
+void MainWindowInt::onSequenceClicked(QListWidgetItem *item) {
+    QString displayName = item->text();
+    bool isZipped = false;
+    QString realName = displayName;
+    if (displayName.endsWith(" [zipped]")) {
+        realName = displayName.left(displayName.length() - 9);
+        isZipped = true;
+    }
+    if (isZipped) {
+        if (!zippedSeqs.contains(realName)) return;
+        currentName = realName;
+        currentZipped = zippedSeqs[realName];
+        currentSeq = nullptr;
+        labelCurrent->setText(QString("Текущая (zipped): %1").arg(realName));
+    } else {
+        if (!sequences.contains(realName)) return;
+        currentName = realName;
+        currentSeq = sequences[realName];
+        currentZipped = nullptr;
+        labelCurrent->setText(QString("Текущая: %1").arg(realName));
+    }
+    updateCurrentDisplay();
 }
 
 #endif // WINDOWINT_H

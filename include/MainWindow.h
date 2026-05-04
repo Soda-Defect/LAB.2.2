@@ -1,6 +1,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
+
+#include "WindowChar.h"
+#include "WindowDouble.h"
 #include "WindowInt.h"
+#include "WindowString.h"
 #include <QApplication>
 
 int  run(int argc, char *argv[]){
@@ -17,8 +21,19 @@ int  run(int argc, char *argv[]){
         MainWindowInt w;
         w.show();
         return a.exec();
+    } else if (choice == "Вещественные числа") {
+        MainWindowDouble w;
+        w.show();
+        return a.exec();
+    } else if (choice == "Символы") {
+        MainWindowChar w;
+        w.show();
+        return a.exec();
+    } else if (choice == "Строки") {
+        MainWindowString w;
+        w.show();
+        return a.exec();
     }
     return 1;
 }
-
 #endif // MAINWINDOW_H
